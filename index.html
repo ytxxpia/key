@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能睡眠监测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c2461 0%, #1e3799 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00b4db, #0083b0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+        
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        #startBtn {
+            background: linear-gradient(90deg, #00b09b, #96c93d);
+            color: white;
+        }
+        
+        #stopBtn {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            color: white;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status-display {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .status-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #a5b1c2;
+        }
+        
+        .status-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        #currentStatus {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .visualization {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        #sleepTimeline {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .timeline-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .details-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .details-panel h3 {
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            color: #74b9ff;
+            border-bottom: 2px solid rgba(116, 185, 255, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        #detailsContent {
+            min-height: 100px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .audio-wave {
+            height: 100px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .wave-visual {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .recording {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .control-panel, .status-display {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .status-card {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌙 智能睡眠监测系统</h1>
+            <p class="subtitle">使用麦克风分析声音频率，实时监测您的睡眠状态</p>
+        </header>
+        
+        <div class="control-panel">
+            <button id="startBtn">开始监测</button>
+            <button id="stopBtn" disabled>停止监测</button>
+        </div>
+        
+        <div class="status-display">
+            <div class="status-card">
+                <h3>当前状态</h3>
+                <div id="currentStatus" class="status-value">未开始</div>
+            </div>
+            <div class="status-card">
+                <h3>波峰频率</h3>
+                <div id="peakFrequency" class="status-value">0 /分钟</div>
+            </div>
+            <div class="status-card">
+                <h3>监测时长</h3>
+                <div id="monitorTime" class="status-value">00:00:00</div>
+            </div>
+            <div class="status-card">
+                <h3>声音强度</h3>
+                <div id="soundLevel" class="status-value">0%</div>
+            </div>
+        </div>
+        
+        <div class="audio-wave">
+            <canvas id="waveCanvas" class="wave-visual"></canvas>
+        </div>
+        
+        <div class="visualization">
+            <h3 style="margin-bottom: 15px; color: #74b9ff;">睡眠时间轴</h3>
+            <div id="sleepTimeline">
+                <div class="timeline-label">时间线 →</div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ff4757;"></div>
+                    <span>监测中/未识别</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #ffa502;"></div>
+                    <span>苏醒状态</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #6c5ce7;"></div>
+                    <span>浅睡状态</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #2d3436;"></div>
+                    <span>深睡状态</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="details-panel">
+            <h3>状态详情</h3>
+            <div id="detailsContent">
+                点击上方时间轴的不同颜色区域，查看详细的睡眠状态信息。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 状态常量
+        const STATUS = {
+            UNKNOWN: { name: '未识别', color: '#ff4757' },
+            AWAKE: { name: '苏醒', color: '#ffa502' },
+            LIGHT_SLEEP: { name: '浅睡', color: '#6c5ce7' },
+            DEEP_SLEEP: { name: '深睡', color: '#2d3436' }
+        };
+
+        // 全局变量
+        let audioContext;
+        let analyser;
+        let microphone;
+        let isRecording = false;
+        let startTime;
+        let timerInterval;
+        let peaksPerMinute = 0;
+        let peakCount = 0;
+        let lastMinutePeaks = [];
+        let sleepSegments = [];
+        let currentSegment = null;
+        let touchDetected = false;
+
+        // DOM元素
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const currentStatusEl = document.getElementById('currentStatus');
+        const peakFrequencyEl = document.getElementById('peakFrequency');
+        const monitorTimeEl = document.getElementById('monitorTime');
+        const soundLevelEl = document.getElementById('soundLevel');
+        const waveCanvas = document.getElementById('waveCanvas');
+        const sleepTimeline = document.getElementById('sleepTimeline');
+        const detailsContent = document.getElementById('detailsContent');
+
+        // 初始化画布
+        const ctx = waveCanvas.getContext('2d');
+        waveCanvas.width = waveCanvas.parentElement.clientWidth;
+        waveCanvas.height = waveCanvas.parentElement.clientHeight;
+
+        // 时间轴画布
+        const timelineCtx = document.createElement('canvas').getContext('2d');
+        timelineCtx.canvas.width = sleepTimeline.clientWidth;
+        timelineCtx.canvas.height = sleepTimeline.clientHeight;
+        sleepTimeline.appendChild(timelineCtx.canvas);
+
+        // 调整画布大小
+        window.addEventListener('resize', () => {
+            waveCanvas.width = waveCanvas.parentElement.clientWidth;
+            waveCanvas.height = waveCanvas.parentElement.clientHeight;
+            
+            timelineCtx.canvas.width = sleepTimeline.clientWidth;
+            timelineCtx.canvas.height = sleepTimeline.clientHeight;
+            renderTimeline();
+        });
+
+        // 开始监测
+        startBtn.addEventListener('click', async () => {
+            try {
+                // 请求麦克风权限
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                });
+                
+                // 初始化音频上下文
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                // 配置分析器
+                analyser.fftSize = 2048;
+                analyser.smoothingTimeConstant = 0.8;
+                microphone.connect(analyser);
+                
+                // 开始监测
+                isRecording = true;
+                startTime = Date.now();
+                startTimer();
+                
+                // 更新按钮状态
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                // 设置状态
+                currentStatusEl.textContent = STATUS.UNKNOWN.name;
+                currentStatusEl.style.background = 'linear-gradient(90deg, #ff4757, #ff6b81)';
+                startBtn.classList.add('recording');
+                
+                // 开始分析音频
+                analyzeAudio();
+                
+                // 创建第一个时间片段
+                currentSegment = {
+                    startTime: Date.now(),
+                    status: STATUS.UNKNOWN,
+                    peaks: []
+                };
+                
+            } catch (error) {
+                console.error('无法访问麦克风:', error);
+                alert('无法访问麦克风，请确保已授予麦克风权限。');
+            }
+        });
+
+        // 停止监测
+        stopBtn.addEventListener('click', () => {
+            isRecording = false;
+            
+            // 停止所有音频处理
+            if (audioContext) {
+                audioContext.close();
+            }
+            
+            // 清除计时器
+            clearInterval(timerInterval);
+            
+            // 更新按钮状态
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            startBtn.classList.remove('recording');
+            
+            // 保存最后一个片段
+            if (currentSegment) {
+                currentSegment.endTime = Date.now();
+                sleepSegments.push(currentSegment);
+                currentSegment = null;
+                renderTimeline();
+            }
+        });
+
+        // 计时器
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const hours = Math.floor(elapsed / 3600000);
+                const minutes = Math.floor((elapsed % 3600000) / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                monitorTimeEl.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // 每分钟更新一次波峰频率
+                if (minutes > 0 && minutes % 1 === 0) {
+                    updatePeakFrequency();
+                }
+            }, 1000);
+        }
+
+        // 分析音频数据
+        function analyzeAudio() {
+            if (!isRecording || !analyser) return;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            const timeDomainData = new Uint8Array(bufferLength);
+            
+            function processAudio() {
+                if (!isRecording) return;
+                
+                // 获取频率数据
+                analyser.getByteFrequencyData(dataArray);
+                
+                // 获取时域数据用于波峰检测
+                analyser.getByteTimeDomainData(timeDomainData);
+                
+                // 计算平均音量
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / bufferLength;
+                const soundLevel = Math.min(100, Math.round((average / 128) * 100));
+                
+                // 更新声音强度显示
+                soundLevelEl.textContent = `${soundLevel}%`;
+                
+                // 检测波峰
+                detectPeaks(timeDomainData);
+                
+                // 绘制音频波形
+                drawWaveform(timeDomainData);
+                
+                // 分析睡眠状态
+                analyzeSleepState();
+                
+                // 继续处理下一帧
+                requestAnimationFrame(processAudio);
+            }
+            
+            processAudio();
+        }
+
+        // 检测波峰
+        function detectPeaks(dataArray) {
+            const threshold = 128; // 阈值
+            let peakDetected = false;
+            
+            for (let i = 1; i < dataArray.length - 1; i++) {
+                // 简单的波峰检测：当前值大于前后值且超过阈值
+                if (dataArray[i] > threshold && 
+                    dataArray[i] > dataArray[i - 1] && 
+                    dataArray[i] > dataArray[i + 1]) {
+                    
+                    if (!peakDetected) {
+                        peakCount++;
+                        peakDetected = true;
+                        
+                        // 记录波峰高度
+                        if (currentSegment) {
+                            currentSegment.peaks.push({
+                                time: Date.now(),
+                                amplitude: dataArray[i]
+                            });
+                        }
+                    }
+                } else {
+                    peakDetected = false;
+                }
+            }
+            
+            // 记录每分钟的波峰数
+            const currentMinute = Math.floor((Date.now() - startTime) / 60000);
+            if (!lastMinutePeaks[currentMinute]) {
+                lastMinutePeaks[currentMinute] = 0;
+            }
+            lastMinutePeaks[currentMinute] = peakCount;
+        }
+
+        // 更新波峰频率显示
+        function updatePeakFrequency() {
+            const currentMinute = Math.floor((Date.now() - startTime) / 60000);
+            
+            // 计算最近一分钟的波峰数
+            if (lastMinutePeaks.length > 0) {
+                const recentPeaks = lastMinutePeaks.slice(-2); // 取最近2分钟的数据
+                peaksPerMinute = Math.round(recentPeaks.reduce((a, b) => a + b, 0) / recentPeaks.length);
+                
+                peakFrequencyEl.textContent = `${peaksPerMinute} /分钟`;
+            }
+        }
+
+        // 分析睡眠状态
+        function analyzeSleepState() {
+            if (!currentSegment) return;
+            
+            // 获取最近30秒的波峰数据
+            const recentPeaks = currentSegment.peaks.filter(
+                peak => Date.now() - peak.time < 30000
+            );
+            
+            // 计算波峰高度变化（用于判断浅睡）
+            let amplitudeVariation = 0;
+            if (recentPeaks.length > 1) {
+                const amplitudes = recentPeaks.map(p => p.amplitude);
+                const avg = amplitudes.reduce((a, b) => a + b, 0) / amplitudes.length;
+                const variance = amplitudes.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / amplitudes.length;
+                amplitudeVariation = Math.sqrt(variance);
+            }
+            
+            let newStatus;
+            
+            // 检测是否有人触碰时间轴区域（模拟）
+            if (touchDetected) {
+                newStatus = STATUS.AWAKE;
+                touchDetected = false; // 重置
+            }
+            // 根据波峰频率判断状态
+            else if (peaksPerMinute >= 40) {
+                newStatus = STATUS.AWAKE;
+            } else if (peaksPerMinute <= 20) {
+                newStatus = DEEP_SLEEP;
+            } else {
+                // 波峰频率在20-40之间，根据波峰高度变化判断浅睡或苏醒
+                if (amplitudeVariation > 15) { // 波峰高度变化大
+                    newStatus = STATUS.LIGHT_SLEEP;
+                } else {
+                    newStatus = STATUS.AWAKE;
+                }
+            }
+            
+            // 如果状态改变，保存当前片段并开始新片段
+            if (currentSegment.status !== newStatus) {
+                if (currentSegment.status) { // 不是第一个片段
+                    currentSegment.endTime = Date.now();
+                    sleepSegments.push({...currentSegment});
+                }
+                
+                currentSegment = {
+                    startTime: Date.now(),
+                    status: newStatus,
+                    peaks: []
+                };
+                
+                // 更新状态显示
+                currentStatusEl.textContent = newStatus.name;
+                
+                // 更新状态颜色
+                switch(newStatus) {
+                    case STATUS.AWAKE:
+                        currentStatusEl.style.background = 'linear-gradient(90deg, #ffa502, #ffbe76)';
+                        break;
+                    case STATUS.LIGHT_SLEEP:
+                        currentStatusEl.style.background = 'linear-gradient(90deg, #6c5ce7, #a29bfe)';
+                        break;
+                    case DEEP_SLEEP:
+                        currentStatusEl.style.background = 'linear-gradient(90deg, #2d3436, #636e72)';
+                        break;
+                    default:
+                        currentStatusEl.style.background = 'linear-gradient(90deg, #ff4757, #ff6b81)';
+                }
+                
+                // 重新渲染时间轴
+                renderTimeline();
+            }
+        }
+
+        // 绘制音频波形
+        function drawWaveform(dataArray) {
+            ctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+            
+            // 设置波形样式
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#00b4db';
+            ctx.beginPath();
+            
+            const sliceWidth = waveCanvas.width * 1.0 / dataArray.length;
+            let x = 0;
+            
+            for (let i = 0; i < dataArray.length; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * waveCanvas.height / 2;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                x += sliceWidth;
+            }
+            
+            ctx.lineTo(waveCanvas.width, waveCanvas.height / 2);
+            ctx.stroke();
+            
+            // 绘制渐变背景
+            const gradient = ctx.createLinearGradient(0, 0, 0, waveCanvas.height);
+            gradient.addColorStop(0, 'rgba(0, 180, 219, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 180, 219, 0.1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
+
+        // 渲染时间轴
+        function renderTimeline() {
+            timelineCtx.clearRect(0, 0, timelineCtx.canvas.width, timelineCtx.canvas.height);
+            
+            if (sleepSegments.length === 0 && !currentSegment) {
+                // 显示提示信息
+                timelineCtx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                timelineCtx.font = '16px Arial';
+                timelineCtx.textAlign = 'center';
+                timelineCtx.fillText('开始监测后，睡眠状态将显示在这里', 
+                    timelineCtx.canvas.width / 2, timelineCtx.canvas.height / 2);
+                return;
+            }
+            
+            const allSegments = [...sleepSegments];
+            if (currentSegment) {
+                allSegments.push({
+                    ...currentSegment,
+                    endTime: Date.now()
+                });
+            }
+            
+            const totalDuration = allSegments.length > 0 ? 
+                Date.now() - allSegments[0].startTime : 0;
+            
+            // 绘制时间轴背景
+            timelineCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            timelineCtx.fillRect(0, 0, timelineCtx.canvas.width, timelineCtx.canvas.height);
+            
+            // 绘制每个片段
+            allSegments.forEach(segment => {
+                const segmentStart = segment.startTime - allSegments[0].startTime;
+                const segmentEnd = segment.endTime - allSegments[0].startTime;
+                
+                const x1 = (segmentStart / totalDuration) * timelineCtx.canvas.width;
+                const x2 = (segmentEnd / totalDuration) * timelineCtx.canvas.width;
+                const width = x2 - x1;
+                
+                // 绘制片段
+                timelineCtx.fillStyle = segment.status.color;
+                timelineCtx.fillRect(x1, 0, width, timelineCtx.canvas.height);
+                
+                // 添加分隔线
+                timelineCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                timelineCtx.lineWidth = 1;
+                timelineCtx.beginPath();
+                timelineCtx.moveTo(x2, 0);
+                timelineCtx.lineTo(x2, timelineCtx.canvas.height);
+                timelineCtx.stroke();
+            });
+            
+            // 添加时间刻度
+            const hours = Math.ceil(totalDuration / 3600000);
+            for (let i = 0; i <= hours; i++) {
+                const x = (i / hours) * timelineCtx.canvas.width;
+                
+                timelineCtx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                timelineCtx.font = '12px Arial';
+                timelineCtx.textAlign = 'center';
+                timelineCtx.fillText(`${i}h`, x, timelineCtx.canvas.height - 5);
+            }
+        }
+
+        // 点击时间轴查看详情
+        timelineCtx.canvas.addEventListener('click', (e) => {
+            // 标记为触碰（模拟有人触碰页面）
+            touchDetected = true;
+            
+            const rect = timelineCtx.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            
+            // 找到点击的片段
+            const allSegments = [...sleepSegments];
+            if (currentSegment) {
+                allSegments.push({
+                    ...currentSegment,
+                    endTime: Date.now()
+                });
+            }
+            
+            const totalDuration = allSegments.length > 0 ? 
+                Date.now() - allSegments[0].startTime : 0;
+            
+            const clickTime = (x / timelineCtx.canvas.width) * totalDuration;
+            const clickTimestamp = allSegments[0].startTime + clickTime;
+            
+            let clickedSegment = null;
+            for (const segment of allSegments) {
+                if (clickTimestamp >= segment.startTime && clickTimestamp <= segment.endTime) {
+                    clickedSegment = segment;
+                    break;
+                }
+            }
+            
+            if (clickedSegment) {
+                // 显示详细信息
+                const startTime = new Date(clickedSegment.startTime);
+                const endTime = new Date(clickedSegment.endTime);
+                const duration = Math.round((clickedSegment.endTime - clickedSegment.startTime) / 1000);
+                
+                let details = `
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="color: ${clickedSegment.status.color}; margin-bottom: 10px;">
+                            ${clickedSegment.status.name} 状态
+                        </h4>
+                        <p><strong>开始时间:</strong> ${startTime.toLocaleTimeString()}</p>
+                        <p><strong>结束时间:</strong> ${endTime.toLocaleTimeString()}</p>
+                        <p><strong>持续时间:</strong> ${duration} 秒</p>
+                        <p><strong>波峰数量:</strong> ${clickedSegment.peaks.length}</p>
+                    </div>
+                `;
+                
+                // 添加状态描述
+                if (clickedSegment.status === STATUS.AWAKE) {
+                    details += `<p><strong>状态描述:</strong> 您处于清醒状态，呼吸和身体活动较频繁。</p>`;
+                } else if (clickedSegment.status === STATUS.LIGHT_SLEEP) {
+                    details += `<p><strong>状态描述:</strong> 您处于浅睡状态，容易醒来，可能有梦境。</p>`;
+                } else if (clickedSegment.status === DEEP_SLEEP) {
+                    details += `<p><strong>状态描述:</strong> 您处于深度睡眠状态，身体完全放松，呼吸平稳。</p>`;
+                } else {
+                    details += `<p><strong>状态描述:</strong> 系统正在分析您的睡眠状态。</p>`;
+                }
+                
+                detailsContent.innerHTML = details;
+            }
+            
+            // 高亮显示点击的区域
+            timelineCtx.strokeStyle = '#ffffff';
+            timelineCtx.lineWidth = 3;
+            timelineCtx.strokeRect(x - 2, 0, 4, timelineCtx.canvas.height);
+            
+            // 3秒后移除高亮
+            setTimeout(() => {
+                renderTimeline();
+            }, 3000);
+        });
+
+        // 初始渲染时间轴
+        renderTimeline();
+        
+        // 页面卸载时停止监测
+        window.addEventListener('beforeunload', () => {
+            if (isRecording) {
+                stopBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
